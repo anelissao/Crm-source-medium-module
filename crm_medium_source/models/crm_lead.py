@@ -40,21 +40,23 @@ class CrmLead(models.Model):
     def create(self, vals_list):
         """Sync source/medium before creating the lead."""
         for vals in vals_list:
-            self._prepare_source_medium(vals)
+            self._sync_source_medium(vals)
         return super().create(vals_list)
 
     def write(self, vals):
         """Sync source/medium before updating the lead."""
-        self._prepare_source_medium(vals)
+        if vals:
+            self._sync_source_medium(vals)
         return super().write(vals)
 
-    def _prepare_source_medium(self, vals):
+    def _sync_source_medium(self, vals):
         """Create or find Source/Medium from free text fields and update vals."""
         
         # ---- SOURCE ----
-        if 'source_gravity' in vals and vals.get('source_gravity'):
-            source_name = vals['source_gravity'].strip()
-            if source_name:
+        if 'source_gravity' in vals:
+            source_gravity = vals.get('source_gravity')
+            if source_gravity and source_gravity.strip():
+                source_name = source_gravity.strip()
                 source = self.env["utm.source"].search(
                     [("name", "=ilike", source_name)],
                     limit=1,
@@ -64,9 +66,10 @@ class CrmLead(models.Model):
                 vals['source_id'] = source.id
 
         # ---- MEDIUM ----
-        if 'medium_gravity' in vals and vals.get('medium_gravity'):
-            medium_name = vals['medium_gravity'].strip()
-            if medium_name:
+        if 'medium_gravity' in vals:
+            medium_gravity = vals.get('medium_gravity')
+            if medium_gravity and medium_gravity.strip():
+                medium_name = medium_gravity.strip()
                 medium = self.env["utm.medium"].search(
                     [("name", "=ilike", medium_name)],
                     limit=1,
