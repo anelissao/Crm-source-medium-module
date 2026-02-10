@@ -14,28 +14,6 @@ class CrmLead(models.Model):
         help="Free text medium, auto-creates CRM Medium if missing",
     )
 
-    @api.onchange('source_gravity')
-    def _onchange_source_gravity(self):
-        """On change: attach existing Source if name matches."""
-        if self.source_gravity and self.source_gravity.strip():
-            name = self.source_gravity.strip()
-            src = self.env['utm.source'].search([('name', '=ilike', name)], limit=1)
-            if src:
-                self.source_id = src.id
-        else:
-            self.source_id = False
-
-    @api.onchange('medium_gravity')
-    def _onchange_medium_gravity(self):
-        """On change: attach existing Medium if name matches."""
-        if self.medium_gravity and self.medium_gravity.strip():
-            name = self.medium_gravity.strip()
-            med = self.env['utm.medium'].search([('name', '=ilike', name)], limit=1)
-            if med:
-                self.medium_id = med.id
-        else:
-            self.medium_id = False
-
     @api.model_create_multi
     def create(self, vals_list):
         """Sync source/medium before creating the lead."""
